@@ -30,7 +30,7 @@ A comprehensive life tracking and gamifying web application that combines produc
 ### Dashboard
 
 - Profile card showing Level, XP, Coins, Energy
-- User profile editing (name and avatar emoji)
+- User profile editing (name and profile picture upload)
 - Quick preview of tasks, habits, and missions
 - Real world money tracker (with show/hide toggle)
 - Pomodoro timer (25 min focus + 5 min rest)
@@ -45,7 +45,7 @@ A comprehensive life tracking and gamifying web application that combines produc
 ### Tracking
 
 - **Mood**: Mood tracker with 1-5 rating and notes
-- **Health**: Track sleep time, lab tests, and weight
+- **Health**: Track sleep time (1-12 hours) with automatic energy regeneration (1 hour of sleep = 1 energy, max 24 energy)
 - **Finance**: Income and expense tracker with budget overview
 
 ### Media Management
@@ -103,7 +103,7 @@ A comprehensive life tracking and gamifying web application that combines produc
 
 - Build and manage various building types
 - Create custom lewd locations with resource requirements
-- Building progress tracking (Pomodoro minutes)
+- Building progress tracking using build power (from completed Pomodoro sessions)
 - Regular buildings and custom lewd locations
 
 ### Album
@@ -119,11 +119,11 @@ A comprehensive life tracking and gamifying web application that combines produc
 - **XP System**: XP required to level up increases by 100 XP per level (Level 0→1: 100 XP, Level 1→2: 200 XP, Level 2→3: 300 XP)
 - **Energy System**: Max 24 energy, gained from sleep (1 hour = 1 energy)
   - Energy is consumed for various activities: gacha pulls (1 energy), dungeon attacks (1 energy), photo uploads (1 energy)
-- **Rewards**: Tasks and missions give XP and coins based on difficulty
+- **Rewards**: Tasks and missions give XP and coins based on difficulty. Completed Pomodoro sessions also give XP (default: 10 XP per session, configurable)
 - **Punishments**: Habits and skipped dailies can reduce coins
 - **Resources**: Collect meat, wood, stone, iron, and crystal through various activities
 - **Combat System**: Base attack + weapon damage bonus = total damage
-- **Building System**: Buildings require resources and Pomodoro minutes to complete
+- **Building System**: Buildings require resources and build power to complete. Build power is gained from completed Pomodoro sessions (25 build power per 25-minute session)
 - **Character System**: Collect characters through gacha, manage active roster (max population limit)
 
 ## Installation
@@ -177,30 +177,15 @@ npm run dev
 This will concurrently start:
 
 - **Backend server** on `http://localhost:5000`
-- **Frontend dev server** on `http://localhost:5173` (Vite default port)
+- **Frontend dev server** on `http://localhost:3000`
 
 The frontend will automatically proxy API requests to the backend.
 
 ## Building for Production
 
-To build the application for production:
+To build and run the application for production from the root directory:
 
-1. **Build the frontend**:
-
-```bash
-cd frontend
-npm run build
-```
-
-This will create a `dist` folder in the `frontend` directory with the optimized production build.
-
-2. **Configure the backend to serve static files** (optional):
-
-   - Update `backend/server.js` to serve the frontend static files in production
-   - Or use a reverse proxy (like Nginx) to serve the frontend files and proxy API requests to the backend
-   - Or deploy frontend and backend separately (frontend on a static host, backend on a Node.js server)
-
-3. **Set production environment variables**:
+1. **Set production environment variables**:
 
 Create or update `backend/.env` with production values:
 
@@ -210,16 +195,33 @@ PORT=5000
 NODE_ENV=production
 ```
 
-4. **Start the production server**:
+2. **Build the frontend**:
 
 ```bash
-cd backend
+npm run build
+```
+
+This will build the frontend and create a `dist` folder in the `frontend` directory with the optimized production build.
+
+3. **Start the production server**:
+
+```bash
 npm start
 ```
 
-The backend server will run on `http://localhost:5000` (or the port specified in the `PORT` environment variable).
+Or with explicit production mode:
 
-**Note**: Make sure MongoDB is running and configured before starting the production server.
+```bash
+npm run start:prod
+```
+
+The backend server will run on `http://localhost:5000` (or the port specified in the `PORT` environment variable) and automatically serve the frontend static files.
+
+**Note**:
+
+- Make sure MongoDB is running and configured before starting the production server.
+- The backend is configured to automatically serve the frontend static files in production mode.
+- All commands can be run from the root directory without needing to `cd` into backend or frontend folders.
 
 ## Project Structure
 
@@ -306,7 +308,7 @@ All API endpoints are prefixed with `/api`:
 - **`/api/habits`** - Habits (CRUD, streak tracking, manual recording)
 - **`/api/missions`** - Long-term missions (CRUD, progress tracking)
 - **`/api/mood`** - Mood entries (create, read, filter by date)
-- **`/api/health`** - Health tracking (sleep, weight, lab tests)
+- **`/api/health`** - Health tracking (sleep tracking with energy regeneration)
 - **`/api/finance`** - Finance transactions (income, expenses, budget)
 - **`/api/media`** - Media management (books, games, movies, TV shows)
 - **`/api/characters`** - Character management (CRUD, location mapping)
@@ -318,7 +320,6 @@ All API endpoints are prefixed with `/api`:
 - **`/api/market`** - Resource-to-coin exchange
 - **`/api/gacha`** - Gacha system for character collection
 - **`/api/album`** - Photo album management (upload, tag, link to characters/locations)
-- **`/api/health`** (GET) - Health check endpoint
 
 All endpoints support standard REST operations (GET, POST, PUT, DELETE) where applicable.
 
@@ -330,6 +331,9 @@ All endpoints support standard REST operations (GET, POST, PUT, DELETE) where ap
 - `npm run server` - Start only the backend server
 - `npm run client` - Start only the frontend dev server
 - `npm run install-all` - Install dependencies for root, backend, and frontend
+- `npm run build` - Build frontend for production
+- `npm start` - Start production server (serves both backend API and frontend)
+- `npm run start:prod` - Start production server with explicit NODE_ENV=production
 
 ### Backend
 
@@ -363,7 +367,7 @@ All endpoints support standard REST operations (GET, POST, PUT, DELETE) where ap
 - **Dungeons**: Multi-stage dungeons with enemies and bosses
 - **Combat**: Energy-based (1 energy per attack), weapon damage bonuses
 - **Resources**: Meat, wood, stone, iron, crystal
-- **Buildings**: Construct buildings using resources and Pomodoro minutes
+- **Buildings**: Construct buildings using resources and build power (from completed Pomodoro sessions)
 - **Gacha**: Collect characters using energy
 - **Album**: Photo management linked to characters and locations
 
@@ -389,5 +393,6 @@ All endpoints support standard REST operations (GET, POST, PUT, DELETE) where ap
 - Image uploads are stored as base64 strings in the database
 - Frontend runs on Vite dev server (default port 5173)
 - Backend runs on Express server (default port 5000)
+- Frontend runs on Vite dev server (port 3000)
 - CORS is enabled for development
 - Large payload support (50MB limit for JSON/URL-encoded data)

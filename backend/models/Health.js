@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const healthSchema = new mongoose.Schema({
-  type: { type: String, enum: ['sleep', 'lab', 'weight'], required: true },
+  type: { type: String, enum: ['sleep'], required: true },
   value: { type: Number },
   unit: { type: String, default: '' },
   notes: { type: String, default: '' },
