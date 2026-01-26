@@ -301,7 +301,53 @@ function ExternalSourcesPopover({ sources, itemId }) {
   );
 }
 
+// Load filters from localStorage
+const loadFiltersFromStorage = () => {
+  try {
+    const savedFilters = localStorage.getItem("mediaFilters");
+    if (savedFilters) {
+      return JSON.parse(savedFilters);
+    }
+  } catch (error) {
+    console.error("Error loading filters from localStorage:", error);
+  }
+  return {
+    type: "",
+    status: "",
+    yearFrom: "",
+    yearTo: "",
+    title: "",
+    description: "",
+    externalSources: "",
+    countryOrigin: "",
+  };
+};
+
+// Load view settings from localStorage
+const loadViewSettingsFromStorage = () => {
+  try {
+    const savedSettings = localStorage.getItem("mediaViewSettings");
+    if (savedSettings) {
+      return JSON.parse(savedSettings);
+    }
+  } catch (error) {
+    console.error("Error loading view settings from localStorage:", error);
+  }
+  return {
+    itemsPerPage: 20,
+    viewMode: "gallery",
+    showCoverImage: true,
+    fitImage: true,
+    cardSize: 4,
+    sortField: null,
+    sortDirection: "asc",
+  };
+};
+
 export default function Media() {
+  // Initialize view settings from localStorage
+  const initialViewSettings = loadViewSettingsFromStorage();
+
   const [media, setMedia] = useState([]);
   const [open, setOpen] = useState(false);
   const [editingMedia, setEditingMedia] = useState(null);
@@ -311,17 +357,17 @@ export default function Media() {
   const [urlInput, setUrlInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [viewMode, setViewMode] = useState("gallery"); // 'gallery', 'table', or 'map'
-  const [showCoverImage, setShowCoverImage] = useState(true);
-  const [fitImage, setFitImage] = useState(true); // Default true
-  const [cardSize, setCardSize] = useState(4); // Grid columns: 1-6
+  const [viewMode, setViewMode] = useState(initialViewSettings.viewMode); // 'gallery', 'table', or 'map'
+  const [showCoverImage, setShowCoverImage] = useState(initialViewSettings.showCoverImage);
+  const [fitImage, setFitImage] = useState(initialViewSettings.fitImage);
+  const [cardSize, setCardSize] = useState(initialViewSettings.cardSize); // Grid columns: 1-6
   const [imageError, setImageError] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [itemsPerPage, setItemsPerPage] = useState(initialViewSettings.itemsPerPage);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const [sortField, setSortField] = useState(null); // 'title', 'type', 'status', 'year', 'countryOrigin', 'externalSourcesCount'
-  const [sortDirection, setSortDirection] = useState("asc"); // 'asc' or 'desc'
+  const [sortField, setSortField] = useState(initialViewSettings.sortField); // 'title', 'type', 'status', 'year', 'countryOrigin', 'externalSourcesCount'
+  const [sortDirection, setSortDirection] = useState(initialViewSettings.sortDirection); // 'asc' or 'desc'
   const [formData, setFormData] = useState({
     title: "",
     dbLinks: [],
@@ -333,16 +379,8 @@ export default function Media() {
     externalSources: [],
     countryOrigin: "",
   });
-  const [filters, setFilters] = useState({
-    type: "",
-    status: "",
-    yearFrom: "",
-    yearTo: "",
-    title: "",
-    description: "",
-    externalSources: "",
-    countryOrigin: "",
-  });
+
+  const [filters, setFilters] = useState(loadFiltersFromStorage);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [countryMedia, setCountryMedia] = useState([]);
   const [countryList, setCountryList] = useState([]);
@@ -412,6 +450,33 @@ export default function Media() {
 
     loadCountryList();
   }, []);
+
+  // Save filters to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem("mediaFilters", JSON.stringify(filters));
+    } catch (error) {
+      console.error("Error saving filters to localStorage:", error);
+    }
+  }, [filters]);
+
+  // Save view settings to localStorage whenever they change
+  useEffect(() => {
+    try {
+      const viewSettings = {
+        itemsPerPage,
+        viewMode,
+        showCoverImage,
+        fitImage,
+        cardSize,
+        sortField,
+        sortDirection,
+      };
+      localStorage.setItem("mediaViewSettings", JSON.stringify(viewSettings));
+    } catch (error) {
+      console.error("Error saving view settings to localStorage:", error);
+    }
+  }, [itemsPerPage, viewMode, showCoverImage, fitImage, cardSize, sortField, sortDirection]);
 
   useEffect(() => {
     loadData();

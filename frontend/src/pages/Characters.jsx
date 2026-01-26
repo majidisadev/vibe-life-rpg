@@ -430,7 +430,49 @@ function JapanPrefecturesMapView({ characters, onPrefectureClick, selectedPrefec
   );
 }
 
+// Load filters from localStorage
+const loadFiltersFromStorage = () => {
+  try {
+    const savedFilters = localStorage.getItem("characterFilters");
+    if (savedFilters) {
+      return JSON.parse(savedFilters);
+    }
+  } catch (error) {
+    console.error("Error loading filters from localStorage:", error);
+  }
+  return {
+    name: "",
+    countryOrigin: "",
+    japanPrefecture: "",
+    media: "",
+  };
+};
+
+// Load view settings from localStorage
+const loadViewSettingsFromStorage = () => {
+  try {
+    const savedSettings = localStorage.getItem("characterViewSettings");
+    if (savedSettings) {
+      return JSON.parse(savedSettings);
+    }
+  } catch (error) {
+    console.error("Error loading view settings from localStorage:", error);
+  }
+  return {
+    itemsPerPage: 20,
+    viewMode: "gallery",
+    showCoverImage: true,
+    fitImage: true,
+    cardSize: 4,
+    sortField: null,
+    sortDirection: "asc",
+  };
+};
+
 export default function Characters() {
+  // Initialize view settings from localStorage
+  const initialViewSettings = loadViewSettingsFromStorage();
+
   const [characters, setCharacters] = useState([]);
   const [mediaList, setMediaList] = useState([]);
   const [open, setOpen] = useState(false);
@@ -439,19 +481,19 @@ export default function Characters() {
   const [characterToDelete, setCharacterToDelete] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [viewMode, setViewMode] = useState("gallery"); // 'gallery', 'table', or 'map'
+  const [viewMode, setViewMode] = useState(initialViewSettings.viewMode); // 'gallery', 'table', or 'map'
   const [mapViewMode, setMapViewMode] = useState("world"); // 'world' or 'japan'
-  const [showCoverImage, setShowCoverImage] = useState(true);
-  const [fitImage, setFitImage] = useState(true);
-  const [cardSize, setCardSize] = useState(4);
+  const [showCoverImage, setShowCoverImage] = useState(initialViewSettings.showCoverImage);
+  const [fitImage, setFitImage] = useState(initialViewSettings.fitImage);
+  const [cardSize, setCardSize] = useState(initialViewSettings.cardSize);
   const [imageError, setImageError] = useState(false);
   const [imageErrors, setImageErrors] = useState({}); // Track image errors per character ID
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [itemsPerPage, setItemsPerPage] = useState(initialViewSettings.itemsPerPage);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const [sortField, setSortField] = useState(null);
-  const [sortDirection, setSortDirection] = useState("asc");
+  const [sortField, setSortField] = useState(initialViewSettings.sortField);
+  const [sortDirection, setSortDirection] = useState(initialViewSettings.sortDirection);
   const [formData, setFormData] = useState({
     name: "",
     media: "",
@@ -474,12 +516,8 @@ export default function Characters() {
       },
     },
   });
-  const [filters, setFilters] = useState({
-    name: "",
-    countryOrigin: "",
-    japanPrefecture: "",
-    media: "",
-  });
+
+  const [filters, setFilters] = useState(loadFiltersFromStorage);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [selectedPrefecture, setSelectedPrefecture] = useState(null);
   const [countryCharacters, setCountryCharacters] = useState([]);
@@ -614,6 +652,33 @@ export default function Characters() {
 
     loadMediaList();
   }, []);
+
+  // Save filters to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem("characterFilters", JSON.stringify(filters));
+    } catch (error) {
+      console.error("Error saving filters to localStorage:", error);
+    }
+  }, [filters]);
+
+  // Save view settings to localStorage whenever they change
+  useEffect(() => {
+    try {
+      const viewSettings = {
+        itemsPerPage,
+        viewMode,
+        showCoverImage,
+        fitImage,
+        cardSize,
+        sortField,
+        sortDirection,
+      };
+      localStorage.setItem("characterViewSettings", JSON.stringify(viewSettings));
+    } catch (error) {
+      console.error("Error saving view settings to localStorage:", error);
+    }
+  }, [itemsPerPage, viewMode, showCoverImage, fitImage, cardSize, sortField, sortDirection]);
 
   useEffect(() => {
     loadData();
