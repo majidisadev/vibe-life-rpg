@@ -29,7 +29,24 @@ import {
   SelectValue,
 } from "../components/ui/select";
 import { Checkbox } from "../components/ui/checkbox";
-import { Plus, Image as ImageIcon, Trash2, Zap, Tag, ChevronLeft, ChevronRight, Grid, LayoutGrid, Columns, Filter, Search, X, ArrowLeft, Users, MapPin } from "lucide-react";
+import {
+  Plus,
+  Image as ImageIcon,
+  Trash2,
+  Zap,
+  Tag,
+  ChevronLeft,
+  ChevronRight,
+  Grid,
+  LayoutGrid,
+  Columns,
+  Filter,
+  Search,
+  X,
+  ArrowLeft,
+  Users,
+  MapPin,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import api from "../lib/api";
@@ -65,7 +82,7 @@ export default function Album() {
 
   // Get all unique tags from photos
   const allTags = Array.from(
-    new Set(photos.flatMap((photo) => photo.tags || []))
+    new Set(photos.flatMap((photo) => photo.tags || [])),
   ).sort();
 
   // Filter photos by selected tags and search query
@@ -73,20 +90,31 @@ export default function Album() {
     // Filter by tags
     if (selectedTags.length > 0) {
       const photoTags = photo.tags || [];
-      const hasSelectedTag = selectedTags.some((tag) => photoTags.includes(tag));
+      const hasSelectedTag = selectedTags.some((tag) =>
+        photoTags.includes(tag),
+      );
       if (!hasSelectedTag) return false;
     }
 
     // Filter by search query
-    const titleMatch = !searchQuery.title || 
-      (photo.title || "").toLowerCase().includes(searchQuery.title.toLowerCase());
-    
-    const locationMatch = !searchQuery.location || 
-      (photo.location?.name || "").toLowerCase().includes(searchQuery.location.toLowerCase());
-    
-    const charactersMatch = !searchQuery.characters || 
-      (photo.characters || []).some((char) => 
-        (char.name || "").toLowerCase().includes(searchQuery.characters.toLowerCase())
+    const titleMatch =
+      !searchQuery.title ||
+      (photo.title || "")
+        .toLowerCase()
+        .includes(searchQuery.title.toLowerCase());
+
+    const locationMatch =
+      !searchQuery.location ||
+      (photo.location?.name || "")
+        .toLowerCase()
+        .includes(searchQuery.location.toLowerCase());
+
+    const charactersMatch =
+      !searchQuery.characters ||
+      (photo.characters || []).some((char) =>
+        (char.name || "")
+          .toLowerCase()
+          .includes(searchQuery.characters.toLowerCase()),
       );
 
     return titleMatch && locationMatch && charactersMatch;
@@ -119,21 +147,21 @@ export default function Album() {
       // Add pagination params
       params.append("page", currentPage.toString());
       params.append("limit", itemsPerPage.toString());
-      
+
       // Add filter params if needed (for future use)
       // if (selectedTags.length > 0) {
       //   selectedTags.forEach(tag => params.append("tags", tag));
       // }
-      
+
       const queryString = params.toString();
       const url = queryString ? `/album?${queryString}` : "/album";
-      
+
       const [photosRes, charactersRes, buildingsRes] = await Promise.all([
         api.get(url),
         api.get("/characters?limit=1000"),
         api.get("/buildings"),
       ]);
-      
+
       // Handle both old format (array) and new format (object with data and pagination)
       if (Array.isArray(photosRes.data)) {
         setPhotos(photosRes.data || []);
@@ -146,26 +174,29 @@ export default function Album() {
           setTotalPages(photosRes.data.pagination.totalPages);
         }
       }
-      
+
       // Handle both old format (array) and new format (object with data and pagination)
       let characters = [];
       if (charactersRes && charactersRes.data) {
         if (Array.isArray(charactersRes.data)) {
           characters = charactersRes.data;
-        } else if (charactersRes.data.data && Array.isArray(charactersRes.data.data)) {
+        } else if (
+          charactersRes.data.data &&
+          Array.isArray(charactersRes.data.data)
+        ) {
           characters = charactersRes.data.data;
         }
       }
-      
+
       if (user?.activeCharacters) {
         const activeList = characters.filter((c) =>
-          user.activeCharacters.includes(c._id)
+          user.activeCharacters.includes(c._id),
         );
         setActiveCharacters(activeList);
       }
-      
+
       const builtLewdLocations = buildingsRes.data.filter(
-        (b) => b.type === "lewd_location" && b.built
+        (b) => b.type === "lewd_location" && b.built,
       );
       setLewdLocations(builtLewdLocations);
     } catch (error) {
@@ -220,7 +251,6 @@ export default function Album() {
     });
   };
 
-
   const handleDelete = async (photoId) => {
     try {
       await api.delete(`/album/${photoId}`);
@@ -243,7 +273,7 @@ export default function Album() {
         <div className="flex items-center gap-3">
           <Link to="/fantasy-world">
             <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="w-5 h-5" />
             </Button>
           </Link>
           <h1 className="text-3xl font-bold">Album</h1>
@@ -264,15 +294,13 @@ export default function Album() {
               }}
               disabled={!user || user.energy < 1}
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="w-4 h-4 mr-2" />
               Upload Photo (1 Energy)
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>
-                Upload Photo
-              </DialogTitle>
+              <DialogTitle>Upload Photo</DialogTitle>
               <DialogDescription>
                 Upload a photo (consumes 1 energy)
               </DialogDescription>
@@ -282,7 +310,9 @@ export default function Album() {
                 <Label>Title</Label>
                 <Input
                   value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, title: e.target.value })
+                  }
                   placeholder="Enter photo title..."
                   className="mt-2"
                 />
@@ -306,14 +336,14 @@ export default function Album() {
                     placeholder="Add tag..."
                   />
                   <Button type="button" onClick={handleAddTag}>
-                    <Tag className="h-4 w-4" />
+                    <Tag className="w-4 h-4" />
                   </Button>
                 </div>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {formData.tags.map((tag) => (
                     <div
                       key={tag}
-                      className="flex items-center gap-1 px-2 py-1 bg-muted rounded-md text-sm"
+                      className="flex items-center gap-1 px-2 py-1 text-sm rounded-md bg-muted"
                     >
                       {tag}
                       <button
@@ -329,22 +359,28 @@ export default function Album() {
               </div>
               <div>
                 <Label>Characters (from active characters)</Label>
-                <div className="grid grid-cols-2 gap-2 mt-2 max-h-40 overflow-y-auto">
+                <div className="grid grid-cols-2 gap-2 mt-2 overflow-y-auto max-h-40">
                   {activeCharacters.map((character) => (
-                    <div key={character._id} className="flex items-center gap-2">
+                    <div
+                      key={character._id}
+                      className="flex items-center gap-2"
+                    >
                       <Checkbox
                         checked={formData.characters.includes(character._id)}
                         onCheckedChange={(checked) => {
                           if (checked) {
                             setFormData({
                               ...formData,
-                              characters: [...formData.characters, character._id],
+                              characters: [
+                                ...formData.characters,
+                                character._id,
+                              ],
                             });
                           } else {
                             setFormData({
                               ...formData,
                               characters: formData.characters.filter(
-                                (id) => id !== character._id
+                                (id) => id !== character._id,
                               ),
                             });
                           }
@@ -356,11 +392,14 @@ export default function Album() {
                 </div>
               </div>
               <div>
-                <Label>Location (Lewd Location)</Label>
+                <Label>Location</Label>
                 <Select
                   value={formData.location || "none"}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, location: value === "none" ? "" : value })
+                    setFormData({
+                      ...formData,
+                      location: value === "none" ? "" : value,
+                    })
                   }
                 >
                   <SelectTrigger>
@@ -385,9 +424,12 @@ export default function Album() {
                     resetForm();
                   }}
                 >
-                  <X className="h-4 w-4" />
+                  <X className="w-4 h-4" />
                 </Button>
-                <Button type="submit" disabled={!formData.image || !user || user.energy < 1}>
+                <Button
+                  type="submit"
+                  disabled={!formData.image || !user || user.energy < 1}
+                >
                   Upload
                 </Button>
               </DialogFooter>
@@ -399,10 +441,10 @@ export default function Album() {
       {/* Search Form */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <Search className="h-5 w-5" />
+          <Search className="w-5 h-5" />
           <h2 className="text-xl font-semibold">Search</h2>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div>
             <Label htmlFor="search-title">Title</Label>
             <div className="relative mt-2">
@@ -418,12 +460,10 @@ export default function Album() {
               {searchQuery.title && (
                 <button
                   type="button"
-                  onClick={() =>
-                    setSearchQuery({ ...searchQuery, title: "" })
-                  }
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  onClick={() => setSearchQuery({ ...searchQuery, title: "" })}
+                  className="absolute -translate-y-1/2 right-2 top-1/2 text-muted-foreground hover:text-foreground"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="w-4 h-4" />
                 </button>
               )}
             </div>
@@ -446,9 +486,9 @@ export default function Album() {
                   onClick={() =>
                     setSearchQuery({ ...searchQuery, location: "" })
                   }
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute -translate-y-1/2 right-2 top-1/2 text-muted-foreground hover:text-foreground"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="w-4 h-4" />
                 </button>
               )}
             </div>
@@ -471,36 +511,40 @@ export default function Album() {
                   onClick={() =>
                     setSearchQuery({ ...searchQuery, characters: "" })
                   }
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute -translate-y-1/2 right-2 top-1/2 text-muted-foreground hover:text-foreground"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="w-4 h-4" />
                 </button>
               )}
             </div>
           </div>
         </div>
-        {(searchQuery.title || searchQuery.location || searchQuery.characters) && (
+        {(searchQuery.title ||
+          searchQuery.location ||
+          searchQuery.characters) && (
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setSearchQuery({ title: "", location: "", characters: "" })}
+            onClick={() =>
+              setSearchQuery({ title: "", location: "", characters: "" })
+            }
           >
-            <X className="h-4 w-4 mr-2" />
+            <X className="w-4 h-4 mr-2" />
             Clear search
           </Button>
         )}
       </div>
 
       {/* Filters and Layout Controls */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         {/* Tag Filter */}
         {allTags.length > 0 && (
           <div className="flex-1">
             <Label className="flex items-center gap-2 mb-2">
-              <Filter className="h-4 w-4" />
+              <Filter className="w-4 h-4" />
               Filter by Tags:
             </Label>
-            <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 border rounded-md">
+            <div className="flex flex-wrap gap-2 p-2 overflow-y-auto border rounded-md max-h-32">
               {allTags.map((tag) => (
                 <div key={tag} className="flex items-center gap-2">
                   <Checkbox
@@ -546,7 +590,7 @@ export default function Album() {
               onClick={() => setLayout("grid")}
               title="Grid Layout"
             >
-              <Grid className="h-4 w-4" />
+              <Grid className="w-4 h-4" />
             </Button>
             <Button
               variant={layout === "waterfall" ? "default" : "outline"}
@@ -554,7 +598,7 @@ export default function Album() {
               onClick={() => setLayout("waterfall")}
               title="Waterfall Layout"
             >
-              <Columns className="h-4 w-4" />
+              <Columns className="w-4 h-4" />
             </Button>
             <Button
               variant={layout === "justified" ? "default" : "outline"}
@@ -562,7 +606,7 @@ export default function Album() {
               onClick={() => setLayout("justified")}
               title="Justified Layout"
             >
-              <LayoutGrid className="h-4 w-4" />
+              <LayoutGrid className="w-4 h-4" />
             </Button>
           </div>
         </div>
@@ -574,8 +618,8 @@ export default function Album() {
           layout === "grid"
             ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
             : layout === "waterfall"
-            ? "columns-1 md:columns-2 lg:columns-3 gap-4"
-            : "flex flex-wrap gap-4"
+              ? "columns-1 md:columns-2 lg:columns-3 gap-4"
+              : "flex flex-wrap gap-4"
         }
       >
         {paginatedPhotos.map((photo) => (
@@ -585,8 +629,8 @@ export default function Album() {
               layout === "waterfall"
                 ? "break-inside-avoid mb-4"
                 : layout === "justified"
-                ? "flex-1 min-w-[300px] max-w-[400px]"
-                : ""
+                  ? "flex-1 min-w-[300px] max-w-[400px]"
+                  : ""
             }
           >
             <div
@@ -594,8 +638,8 @@ export default function Album() {
                 layout === "waterfall"
                   ? "w-full overflow-hidden cursor-pointer"
                   : layout === "justified"
-                  ? "w-full h-64 overflow-hidden cursor-pointer"
-                  : "w-full h-64 overflow-hidden cursor-pointer"
+                    ? "w-full h-64 overflow-hidden cursor-pointer"
+                    : "w-full h-64 overflow-hidden cursor-pointer"
               }
               onClick={() => setZoomedPhoto(photo)}
             >
@@ -618,7 +662,7 @@ export default function Album() {
                   {photo.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="text-xs px-2 py-1 bg-muted rounded-md"
+                      className="px-2 py-1 text-xs rounded-md bg-muted"
                     >
                       {tag}
                     </span>
@@ -628,14 +672,14 @@ export default function Album() {
             </CardHeader>
             <CardContent>
               {photo.characters && photo.characters.length > 0 && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                  <Users className="h-4 w-4" />
+                <div className="flex items-center gap-2 mb-2 text-sm text-muted-foreground">
+                  <Users className="w-4 h-4" />
                   <span>{photo.characters.map((c) => c.name).join(", ")}</span>
                 </div>
               )}
               {photo.location && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                  <MapPin className="h-4 w-4" />
+                <div className="flex items-center gap-2 mb-2 text-sm text-muted-foreground">
+                  <MapPin className="w-4 h-4" />
                   <span>{photo.location.name}</span>
                 </div>
               )}
@@ -645,7 +689,7 @@ export default function Album() {
                   size="sm"
                   onClick={() => handleDelete(photo._id)}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
             </CardContent>
@@ -655,11 +699,15 @@ export default function Album() {
 
       {/* Pagination Controls */}
       {filteredPhotos.length > 0 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
+        <div className="flex flex-col items-center justify-between gap-4 pt-4 sm:flex-row">
           <div className="text-sm text-muted-foreground">
-            Showing {((currentPage - 1) * itemsPerPage) + 1} to{" "}
-            {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} items
-            {(selectedTags.length > 0 || searchQuery.title || searchQuery.location || searchQuery.characters) && 
+            Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+            {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems}{" "}
+            items
+            {(selectedTags.length > 0 ||
+              searchQuery.title ||
+              searchQuery.location ||
+              searchQuery.characters) &&
               ` (filtered)`}
           </div>
           <div className="flex items-center gap-2">
@@ -669,7 +717,7 @@ export default function Album() {
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
             >
-              <ChevronLeft className="h-4 w-4 mr-1" />
+              <ChevronLeft className="w-4 h-4 mr-1" />
               Previous
             </Button>
             <div className="flex items-center gap-1">
@@ -687,9 +735,7 @@ export default function Album() {
                 return (
                   <Button
                     key={pageNum}
-                    variant={
-                      currentPage === pageNum ? "default" : "outline"
-                    }
+                    variant={currentPage === pageNum ? "default" : "outline"}
                     size="sm"
                     onClick={() => handlePageChange(pageNum)}
                     className="w-10"
@@ -706,14 +752,17 @@ export default function Album() {
               disabled={currentPage === totalPages}
             >
               Next
-              <ChevronRight className="h-4 w-4 ml-1" />
+              <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
           </div>
         </div>
       )}
 
       {/* Zoom Dialog */}
-      <Dialog open={!!zoomedPhoto} onOpenChange={(open) => !open && setZoomedPhoto(null)}>
+      <Dialog
+        open={!!zoomedPhoto}
+        onOpenChange={(open) => !open && setZoomedPhoto(null)}
+      >
         <DialogPortal>
           <DialogOverlay className="bg-background/90 backdrop-blur-md" />
           {zoomedPhoto && (
@@ -725,42 +774,51 @@ export default function Album() {
                     {zoomedPhoto.title || "Photo"}
                   </DialogTitle>
                 </div>
-                
+
                 {/* Image */}
-                <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-muted/30">
+                <div className="flex items-center justify-center flex-1 p-4 overflow-auto bg-muted/30">
                   <img
                     src={zoomedPhoto.image}
                     alt={zoomedPhoto.title || "Photo"}
                     className="max-w-full max-h-[60vh] object-contain rounded-lg"
                   />
                 </div>
-                
+
                 {/* Tags, Characters, Location below image */}
-                <div className="px-6 pb-6 pt-4 space-y-2 border-t">
+                <div className="px-6 pt-4 pb-6 space-y-2 border-t">
                   {zoomedPhoto.tags && zoomedPhoto.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 items-center">
-                      <span className="text-xs font-medium text-muted-foreground">Tags:</span>
+                    <div className="flex flex-wrap items-center gap-1">
+                      <span className="text-xs font-medium text-muted-foreground">
+                        Tags:
+                      </span>
                       {zoomedPhoto.tags.map((tag) => (
                         <span
                           key={tag}
-                          className="text-xs px-2 py-1 bg-muted rounded-md"
+                          className="px-2 py-1 text-xs rounded-md bg-muted"
                         >
                           {tag}
                         </span>
                       ))}
                     </div>
                   )}
-                  {zoomedPhoto.characters && zoomedPhoto.characters.length > 0 && (
-                    <div className="flex flex-wrap gap-1 items-center">
-                      <span className="text-xs font-medium text-muted-foreground">Characters:</span>
-                      <span className="text-xs text-muted-foreground">
-                        {zoomedPhoto.characters.map((c) => c.name || c).join(", ")}
-                      </span>
-                    </div>
-                  )}
+                  {zoomedPhoto.characters &&
+                    zoomedPhoto.characters.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1">
+                        <span className="text-xs font-medium text-muted-foreground">
+                          Characters:
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {zoomedPhoto.characters
+                            .map((c) => c.name || c)
+                            .join(", ")}
+                        </span>
+                      </div>
+                    )}
                   {zoomedPhoto.location && (
-                    <div className="flex flex-wrap gap-1 items-center">
-                      <span className="text-xs font-medium text-muted-foreground">Location:</span>
+                    <div className="flex flex-wrap items-center gap-1">
+                      <span className="text-xs font-medium text-muted-foreground">
+                        Location:
+                      </span>
                       <span className="text-xs text-muted-foreground">
                         {zoomedPhoto.location.name || zoomedPhoto.location}
                       </span>
@@ -769,7 +827,7 @@ export default function Album() {
                 </div>
               </div>
               <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground z-50">
-                <X className="h-4 w-4" />
+                <X className="w-4 h-4" />
                 <span className="sr-only">Close</span>
               </DialogPrimitive.Close>
             </DialogPrimitive.Content>
@@ -779,4 +837,3 @@ export default function Album() {
     </div>
   );
 }
-

@@ -66,7 +66,7 @@ A comprehensive life tracking and gamifying web application that combines produc
 ### Fantasy World
 
 - **Resources System**: Track meat, wood, stone, iron, and crystal resources
-- **Buildings**: Build and manage various buildings including lewd locations
+- **Buildings**: Build and manage various buildings
 - **Character Collection**: Collect supporting characters through gacha system
 - **Active Characters**: Manage active character roster (max population limit)
 - Central hub for accessing all fantasy features
@@ -102,16 +102,13 @@ A comprehensive life tracking and gamifying web application that combines produc
 ### Town
 
 - Build and manage various building types
-- Create custom lewd locations with resource requirements
 - Building progress tracking using build power (from completed Pomodoro sessions)
-- Regular buildings and custom lewd locations
 
 ### Album
 
 - Upload and manage photos (consumes 1 energy per upload)
 - Tag system for photo organization
 - Link photos to active characters
-- Associate photos with lewd locations
 - Photo gallery with filtering capabilities
 
 ## Mechanics
