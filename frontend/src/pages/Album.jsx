@@ -659,28 +659,6 @@ export default function Album() {
                 <Trash2 className="w-4 h-4" />
               </Button>
             </div>
-            {photo.tags && photo.tags.length > 0 && (
-              <CardHeader>
-                <div className="flex flex-wrap gap-1">
-                  {photo.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-2 py-1 text-xs rounded-md bg-muted"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </CardHeader>
-            )}
-            {photo.location && (
-              <CardContent>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <MapPin className="w-4 h-4" />
-                  <span>{photo.location.name}</span>
-                </div>
-              </CardContent>
-            )}
           </Card>
         ))}
       </div>
@@ -773,45 +751,49 @@ export default function Album() {
                 </div>
 
                 {/* Tags, Characters, Location below image */}
-                <div className="px-6 pt-4 pb-6 space-y-2 border-t">
-                  {zoomedPhoto.tags && zoomedPhoto.tags.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-1">
-                      <span className="text-xs font-medium text-muted-foreground">
-                        Tags:
-                      </span>
-                      {zoomedPhoto.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="px-2 py-1 text-xs rounded-md bg-muted"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  {zoomedPhoto.characters &&
-                    zoomedPhoto.characters.length > 0 && (
+                <div className="px-6 pt-4 pb-6 border-t">
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                    {zoomedPhoto.tags && zoomedPhoto.tags.length > 0 && (
                       <div className="flex flex-wrap items-center gap-1">
                         <span className="text-xs font-medium text-muted-foreground">
-                          Characters:
+                          Tags:
+                        </span>
+                        {zoomedPhoto.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="px-2 py-1 text-xs rounded-md bg-muted"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {zoomedPhoto.characters &&
+                      zoomedPhoto.characters.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1">
+                          <span className="text-xs font-medium text-muted-foreground">
+                            Characters:
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {zoomedPhoto.characters
+                              .map((c) => c.name || c)
+                              .join(", ")}
+                          </span>
+                        </div>
+                      )}
+
+                    {zoomedPhoto.location && (
+                      <div className="flex flex-wrap items-center gap-1">
+                        <span className="text-xs font-medium text-muted-foreground">
+                          Location:
                         </span>
                         <span className="text-xs text-muted-foreground">
-                          {zoomedPhoto.characters
-                            .map((c) => c.name || c)
-                            .join(", ")}
+                          {zoomedPhoto.location.name || zoomedPhoto.location}
                         </span>
                       </div>
                     )}
-                  {zoomedPhoto.location && (
-                    <div className="flex flex-wrap items-center gap-1">
-                      <span className="text-xs font-medium text-muted-foreground">
-                        Location:
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {zoomedPhoto.location.name || zoomedPhoto.location}
-                      </span>
-                    </div>
-                  )}
+                  </div>
                 </div>
               </div>
               <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground z-50">

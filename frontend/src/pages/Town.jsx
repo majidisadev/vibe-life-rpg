@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Card,
   CardContent,
@@ -41,6 +41,7 @@ import { toast } from "sonner";
 import api from "../lib/api";
 import { useUser } from "../contexts/UserContext";
 import ImageUpload from "../components/ImageUpload";
+import anime from "animejs";
 
 export default function Town() {
   const { user, refreshUser } = useUser();
@@ -76,6 +77,14 @@ export default function Town() {
       crystal: 0,
     },
   });
+  const [recentlyBuiltId, setRecentlyBuiltId] = useState(null);
+  const housesGridRef = useRef(null);
+  const leisureGridRef = useRef(null);
+  const buildConfirmContentRef = useRef(null);
+  const confirmBuildBtnRef = useRef(null);
+  const hasStaggeredRef = useRef(false);
+  const buildPowerBadgeRef = useRef(null);
+  const hasBuildPowerAnimatedRef = useRef(false);
 
   useEffect(() => {
     loadData();
@@ -168,13 +177,24 @@ export default function Town() {
   const handleConfirmBuild = async () => {
     if (!selectedBuilding) return;
 
+    if (confirmBuildBtnRef.current) {
+      anime({
+        targets: confirmBuildBtnRef.current,
+        scale: [1, 1.06, 1],
+        duration: 220,
+        easing: "easeOutExpo",
+      });
+    }
+
     try {
       await api.post(`/buildings/${selectedBuilding._id}/start-build`);
-      toast.success("Building completed!");
-      await refreshUser();
-      loadData();
+      const builtId = selectedBuilding._id;
       setBuildConfirmOpen(false);
       setSelectedBuilding(null);
+      await refreshUser();
+      await loadData();
+      setRecentlyBuiltId(builtId);
+      toast.success("Building completed!");
     } catch (error) {
       console.error("Error updating build:", error);
       toast.error(error.response?.data?.error || "Error updating build");
@@ -209,6 +229,74 @@ export default function Town() {
 
   const houses = buildings.filter((b) => !b.deletable && b.type === "house");
   const leisureZones = buildings.filter((b) => b.deletable);
+
+  // Stagger building cards on initial load only
+  useEffect(() => {
+    if (buildings.length === 0 || hasStaggeredRef.current) return;
+    hasStaggeredRef.current = true;
+    const houseCards = housesGridRef.current?.querySelectorAll(".town-building-card");
+    const leisureCards = leisureGridRef.current?.querySelectorAll(".town-building-card");
+    const cards = [...(houseCards || []), ...(leisureCards || [])];
+    if (cards.length === 0) return;
+    anime.set(cards, { opacity: 0, translateY: 20 });
+    anime({
+      targets: cards,
+      opacity: [0, 1],
+      translateY: [20, 0],
+      duration: 450,
+      delay: anime.stagger(50, { start: 80 }),
+      easing: "easeOutExpo",
+    });
+  }, [buildings.length]);
+
+  // Build confirm dialog: scale-in when open
+  useEffect(() => {
+    if (!buildConfirmOpen || !buildConfirmContentRef.current) return;
+    const el = buildConfirmContentRef.current;
+    anime.set(el, { opacity: 0, scale: 0.92 });
+    anime({
+      targets: el,
+      opacity: [0, 1],
+      scale: [0.92, 1],
+      duration: 280,
+      easing: "easeOutExpo",
+    });
+  }, [buildConfirmOpen]);
+
+  // Build power badge: subtle scale-in once when user is available
+  useEffect(() => {
+    if (!user || !buildPowerBadgeRef.current || hasBuildPowerAnimatedRef.current) return;
+    hasBuildPowerAnimatedRef.current = true;
+    anime.set(buildPowerBadgeRef.current, { scale: 0.92, opacity: 0 });
+    anime({
+      targets: buildPowerBadgeRef.current,
+      scale: [0.92, 1],
+      opacity: [0, 1],
+      duration: 400,
+      easing: "easeOutExpo",
+    });
+  }, [user]);
+
+  // After build success: bounce the card that was just built
+  useEffect(() => {
+    if (!recentlyBuiltId || buildings.length === 0) return;
+    const id = recentlyBuiltId;
+    const t = setTimeout(() => {
+      const card = document.querySelector(`[data-building-id="${id}"]`);
+      if (!card) {
+        setRecentlyBuiltId(null);
+        return;
+      }
+      anime({
+        targets: card,
+        scale: [1, 1.08, 1],
+        duration: 600,
+        easing: "easeOutElastic(1, 0.5)",
+        complete: () => setRecentlyBuiltId(null),
+      });
+    }, 50);
+    return () => clearTimeout(t);
+  }, [recentlyBuiltId, buildings.length]);
 
   // Check if requirements are met
   const checkRequirements = (building) => {
@@ -288,7 +376,10 @@ export default function Town() {
           <h1 className="text-3xl font-bold">Town</h1>
         </div>
         {user && (
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-md">
+          <div
+            ref={buildPowerBadgeRef}
+            className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-md border border-border/50"
+          >
             <span className="text-lg">⚡</span>
             <span className="text-sm font-medium">
               Build Power:{" "}
@@ -443,11 +534,15 @@ export default function Town() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div ref={housesGridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {houses.map((building) => (
-              <Card key={building._id}>
+              <Card
+                key={building._id}
+                className="town-building-card"
+                data-building-id={building._id}
+              >
                 {building.image && (
-                  <div className="w-full h-32 overflow-hidden">
+                  <div className="w-full h-32 overflow-hidden rounded-t-lg">
                     <img
                       src={building.image}
                       alt={building.name || building.type}
@@ -476,7 +571,13 @@ export default function Town() {
                       </div>
                     )}
                   {building.built ? (
-                    <div className="text-green-500 font-semibold">Built</div>
+                    <div
+                      className={`text-green-500 font-semibold transition-opacity duration-500 ${
+                        recentlyBuiltId === building._id ? "animate-in fade-in" : ""
+                      }`}
+                    >
+                      Built
+                    </div>
                   ) : (
                     <div className="space-y-2">
                       {building.buildPowerRequired === 0 && (
@@ -627,11 +728,15 @@ export default function Town() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div ref={leisureGridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {leisureZones.map((building) => (
-              <Card key={building._id}>
+              <Card
+                key={building._id}
+                className="town-building-card"
+                data-building-id={building._id}
+              >
                 {building.image && (
-                  <div className="w-full h-32 overflow-hidden">
+                  <div className="w-full h-32 overflow-hidden rounded-t-lg">
                     <img
                       src={building.image}
                       alt={building.name}
@@ -696,7 +801,13 @@ export default function Town() {
 
                     {/* Build Status */}
                     {building.built ? (
-                      <div className="text-green-500 font-semibold">Built</div>
+                      <div
+                        className={`text-green-500 font-semibold transition-opacity duration-500 ${
+                          recentlyBuiltId === building._id ? "animate-in fade-in" : ""
+                        }`}
+                      >
+                        Built
+                      </div>
                     ) : (
                       <div className="space-y-2">
                         {building.buildPowerRequired === 0 && (
@@ -734,6 +845,7 @@ export default function Town() {
       {/* Build Confirmation Dialog */}
       <Dialog open={buildConfirmOpen} onOpenChange={setBuildConfirmOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+          <div ref={buildConfirmContentRef} className="flex flex-col flex-1 min-h-0">
           <DialogHeader>
             <DialogTitle>Confirm Build</DialogTitle>
             <DialogDescription>
@@ -890,12 +1002,14 @@ export default function Town() {
               <X className="h-4 w-4" />
             </Button>
             <Button
+              ref={confirmBuildBtnRef}
               onClick={handleConfirmBuild}
               disabled={!requirementsCheck.valid}
             >
               Confirm Build
             </Button>
           </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

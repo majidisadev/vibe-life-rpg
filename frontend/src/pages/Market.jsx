@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Card,
   CardContent,
@@ -21,6 +21,7 @@ import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import api from "../lib/api";
 import { useUser } from "../contexts/UserContext";
+import anime from "animejs";
 
 export default function Market() {
   const { user, refreshUser } = useUser();
@@ -41,10 +42,66 @@ export default function Market() {
     iron: 5,
     crystal: 10,
   });
+  const ratesGridRef = useRef(null);
+  const exchangeCardRef = useRef(null);
+  const exchangeBtnRef = useRef(null);
+  const coinsResultRef = useRef(null);
+  const headerBadgeRef = useRef(null);
+  const hasRatesStaggeredRef = useRef(false);
+  const hasExchangeStaggeredRef = useRef(false);
+  const hasHeaderAnimatedRef = useRef(false);
 
   useEffect(() => {
     loadRates();
   }, []);
+
+  // Stagger rate cards on load
+  useEffect(() => {
+    if (Object.keys(rates).length === 0 || !ratesGridRef.current || hasRatesStaggeredRef.current) return;
+    hasRatesStaggeredRef.current = true;
+    const cards = ratesGridRef.current.querySelectorAll(".market-rate-card");
+    if (cards.length === 0) return;
+    anime.set(cards, { opacity: 0, translateY: 16 });
+    anime({
+      targets: cards,
+      opacity: [0, 1],
+      translateY: [16, 0],
+      duration: 380,
+      delay: anime.stagger(50, { start: 80 }),
+      easing: "easeOutExpo",
+    });
+  }, [rates]);
+
+  // Stagger exchange card sections on load
+  useEffect(() => {
+    if (!exchangeCardRef.current || hasExchangeStaggeredRef.current) return;
+    hasExchangeStaggeredRef.current = true;
+    const sections = exchangeCardRef.current.querySelectorAll(".market-exchange-section");
+    if (sections.length === 0) return;
+    anime.set(sections, { opacity: 0, translateY: 12 });
+    anime({
+      targets: sections,
+      opacity: [0, 1],
+      translateY: [12, 0],
+      duration: 350,
+      delay: anime.stagger(80, { start: 120 }),
+      easing: "easeOutExpo",
+    });
+  }, [user]);
+
+  // Header coins badge scale-in once
+  useEffect(() => {
+    if (!user || !headerBadgeRef.current || hasHeaderAnimatedRef.current) return;
+    hasHeaderAnimatedRef.current = true;
+    anime.set(headerBadgeRef.current, { scale: 0.92, opacity: 0 });
+    anime({
+      targets: headerBadgeRef.current,
+      scale: [0.92, 1],
+      opacity: [0, 1],
+      duration: 400,
+      easing: "easeOutExpo",
+    });
+  }, [user]);
 
   const loadRates = async () => {
     try {
@@ -90,18 +147,41 @@ export default function Market() {
   };
 
   const handleExchange = async () => {
-    try {
-      if (amount <= 0) {
-        toast.error("Amount must be greater than 0");
-        return;
-      }
+    if (amount <= 0) {
+      toast.error("Amount must be greater than 0");
+      return;
+    }
+    if (amount > getAvailableAmount()) {
+      toast.error("Amount exceeds available");
+      return;
+    }
 
+    if (exchangeBtnRef.current) {
+      anime({
+        targets: exchangeBtnRef.current,
+        scale: [1.05, 1],
+        duration: 220,
+        easing: "easeOutExpo",
+      });
+    }
+
+    try {
       const res = await api.post("/market/exchange", {
         resource: selectedResource,
         amount,
       });
+      const coinsReceived = res.data.coins;
 
-      toast.success(`Exchanged ${amount} ${selectedResource} for ${res.data.coins} coins`);
+      if (coinsResultRef.current) {
+        anime({
+          targets: coinsResultRef.current,
+          scale: [1.02, 1.08, 1],
+          duration: 500,
+          easing: "easeOutElastic(1, 0.6)",
+        });
+      }
+
+      toast.success(`Exchanged ${amount} ${selectedResource} for ${coinsReceived} coins`);
       await refreshUser();
       setAmount(0);
     } catch (error) {
@@ -137,6 +217,17 @@ export default function Market() {
           </Link>
           <h1 className="text-3xl font-bold">Market</h1>
         </div>
+        {user && (
+          <div
+            ref={headerBadgeRef}
+            className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-md border border-border/50"
+          >
+            <Coins className="h-5 w-5 text-yellow-600 dark:text-yellow-500" />
+            <span className="text-sm font-medium">
+              <span className="font-semibold">{user.coins ?? 0}</span> coins
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Exchange Rates */}
@@ -176,9 +267,9 @@ export default function Market() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div ref={ratesGridRef} className="grid grid-cols-2 md:grid-cols-5 gap-4">
             {Object.entries(isEditingRates ? editingRates : rates).map(([resource, rate]) => (
-              <div key={resource} className="text-center p-4 border rounded-lg">
+              <div key={resource} className="market-rate-card text-center p-4 border rounded-lg">
                 <div className="text-2xl mb-2">{resourceEmojis[resource]}</div>
                 {isEditingRates ? (
                   <Input
@@ -202,55 +293,66 @@ export default function Market() {
       </Card>
 
       {/* Exchange */}
-      <Card>
+      <Card className="border-primary/20">
         <CardHeader>
-          <CardTitle>Exchange Resources</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <ShoppingCart className="h-5 w-5" />
+            Exchange Resources
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div>
-              <Label>Resource</Label>
-              <Select value={selectedResource} onValueChange={setSelectedResource}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.keys(rates).map((resource) => (
-                    <SelectItem key={resource} value={resource}>
-                      {resource.charAt(0).toUpperCase() + resource.slice(1)} (Available: {getAvailableAmount()})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Amount</Label>
-              <Input
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(parseInt(e.target.value) || 0)}
-                min="0"
-                max={getAvailableAmount()}
-              />
-              <div className="text-sm text-muted-foreground mt-1">
-                Available: {getAvailableAmount()}
+          <div ref={exchangeCardRef} className="space-y-4">
+            <div className="market-exchange-section grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label>Resource</Label>
+                <Select value={selectedResource} onValueChange={setSelectedResource}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.keys(rates).map((resource) => (
+                      <SelectItem key={resource} value={resource}>
+                        {resource.charAt(0).toUpperCase() + resource.slice(1)} (Available: {user?.resources?.[resource] ?? 0})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Amount</Label>
+                <Input
+                  type="number"
+                  value={amount}
+                  onChange={(e) => setAmount(parseInt(e.target.value) || 0)}
+                  min="0"
+                  max={getAvailableAmount()}
+                />
+                <div className="text-sm text-muted-foreground mt-1">
+                  Available: {getAvailableAmount()}
+                </div>
               </div>
             </div>
-            <div className="p-4 bg-muted rounded-lg">
+            <div
+              ref={coinsResultRef}
+              className="market-exchange-section p-4 rounded-lg bg-muted/80 border-2 border-primary/20"
+            >
               <div className="text-sm text-muted-foreground">You will receive</div>
               <div className="text-2xl font-bold flex items-center gap-2">
-                <Coins className="h-5 w-5" />
+                <Coins className="h-5 w-5 text-yellow-600 dark:text-yellow-500" />
                 {getCoinsValue()} coins
               </div>
             </div>
-            <Button
-              className="w-full"
-              onClick={handleExchange}
-              disabled={amount <= 0 || amount > getAvailableAmount()}
-            >
-              <ShoppingCart className="h-4 w-4 mr-2" />
-              Exchange
-            </Button>
+            <div className="market-exchange-section">
+              <Button
+                ref={exchangeBtnRef}
+                className="w-full"
+                onClick={handleExchange}
+                disabled={amount <= 0 || amount > getAvailableAmount()}
+              >
+                <ShoppingCart className="h-4 w-4 mr-2" />
+                Exchange
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

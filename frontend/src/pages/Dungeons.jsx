@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Card,
   CardContent,
@@ -43,7 +43,10 @@ import {
   SheetHeader,
   SheetTitle,
 } from "../components/ui/sheet";
-import { Progress } from "../components/ui/progress";
+import anime from "animejs";
+import DamagePopup from "../components/dungeons/DamagePopup";
+import AnimatedHPBar from "../components/dungeons/AnimatedHPBar";
+import StageTransitionOverlay from "../components/dungeons/StageTransitionOverlay";
 
 export default function Dungeons() {
   const { user, refreshUser } = useUser();
@@ -66,6 +69,18 @@ export default function Dungeons() {
   const [weapon, setWeapon] = useState(null);
   const [enemySearchQueries, setEnemySearchQueries] = useState({}); // { stageIndex: query }
   const [enemySearchOpen, setEnemySearchOpen] = useState({}); // { stageIndex: boolean }
+  // RPG animations
+  const [lastDamage, setLastDamage] = useState(null);
+  const [showDamagePopup, setShowDamagePopup] = useState(false);
+  const [lastAttackEnemyHP, setLastAttackEnemyHP] = useState(null);
+  const [showStageTransition, setShowStageTransition] = useState(false);
+  const [stageTransitionNumber, setStageTransitionNumber] = useState(null);
+  const [pendingStageIndex, setPendingStageIndex] = useState(null);
+  const dungeonCardsRef = useRef(null);
+  const enemyContainerRef = useRef(null);
+  const attackBtnRef = useRef(null);
+  const sheetBattleRef = useRef(null);
+  const prevStageIndexRef = useRef(null);
 
   // Resource emoji mapping
   const resourceEmojis = {
@@ -102,6 +117,52 @@ export default function Dungeons() {
       }
     }
   }, [selectedDungeon, user]);
+
+  // Stagger dungeon cards on load
+  useEffect(() => {
+    if (!dungeons.length || !dungeonCardsRef.current) return;
+    const cards = dungeonCardsRef.current.querySelectorAll(".dungeon-card");
+    if (!cards.length) return;
+    anime.set(cards, { opacity: 0, translateY: 24 });
+    anime({
+      targets: cards,
+      opacity: [0, 1],
+      translateY: [24, 0],
+      duration: 500,
+      delay: anime.stagger(60, { start: 100 }),
+      easing: "easeOutExpo",
+    });
+  }, [dungeons.length]);
+
+  // Enemy intro (fade + scale) when stage changes in sheet
+  useEffect(() => {
+    if (!sheetOpen || !selectedDungeon || enemyContainerRef.current == null) return;
+    const prev = prevStageIndexRef.current;
+    prevStageIndexRef.current = currentStageIndex;
+    if (prev === currentStageIndex) return;
+    const el = enemyContainerRef.current;
+    anime.set(el, { opacity: 0, scale: 0.9 });
+    anime({
+      targets: el,
+      opacity: [0, 1],
+      scale: [0.9, 1],
+      duration: 400,
+      easing: "easeOutExpo",
+    });
+  }, [sheetOpen, selectedDungeon, currentStageIndex]);
+
+  // Battle area fade-in when sheet opens
+  useEffect(() => {
+    if (!sheetOpen || !sheetBattleRef.current) return;
+    const el = sheetBattleRef.current;
+    anime.set(el, { opacity: 0 });
+    anime({ targets: el, opacity: [0, 1], duration: 350, easing: "easeOutExpo" });
+  }, [sheetOpen]);
+
+  // Reset stage ref when sheet closes so enemy intro runs on next open
+  useEffect(() => {
+    if (!sheetOpen) prevStageIndexRef.current = null;
+  }, [sheetOpen]);
 
   const loadData = async () => {
     try {
@@ -302,26 +363,44 @@ export default function Dungeons() {
       if (res.data.success) {
         const { damageDealt, enemyHP, enemyDefeated, reward } = res.data;
         const currentEnemy = getCurrentEnemy(selectedDungeon, true);
-        
-        // Toast notification dengan damage dealt
+        const maxHP = currentEnemy?.enemyStats?.hp || 1;
+
+        setLastDamage(damageDealt);
+        setShowDamagePopup(true);
+        setLastAttackEnemyHP(Math.max(0, enemyHP));
+
+        if (enemyContainerRef.current) {
+          anime({
+            targets: enemyContainerRef.current,
+            translateX: [-6, 6, -6, 6, 0],
+            duration: 400,
+            easing: "easeOutExpo",
+          });
+        }
+        if (attackBtnRef.current) {
+          anime({
+            targets: attackBtnRef.current,
+            scale: [1.08, 1],
+            duration: 200,
+            easing: "easeOutExpo",
+          });
+        }
+
         toast.success(`Dealt ${damageDealt} damage!`, {
           description: enemyDefeated 
             ? `Enemy defeated! +${reward?.xp || 0} XP, +${reward?.coins || 0} Coins`
-            : `Enemy HP: ${enemyHP}/${currentEnemy?.enemyStats?.hp || 0}`,
+            : `Enemy HP: ${enemyHP}/${maxHP}`,
         });
 
-        // Show resource notifications if enemy is defeated and resources are rewarded
         if (enemyDefeated && reward?.resources) {
           const resources = reward.resources;
           const resourceList = [];
-          
           Object.keys(resourceEmojis).forEach((resourceKey) => {
             const amount = resources[resourceKey] || 0;
             if (amount > 0) {
               resourceList.push(`${resourceEmojis[resourceKey]} +${amount}`);
             }
           });
-
           if (resourceList.length > 0) {
             toast.success("Resources gained!", {
               description: resourceList.join(" "),
@@ -331,11 +410,7 @@ export default function Dungeons() {
 
         await refreshUser();
         loadData();
-        
-        // Update selected dungeon
-        if (res.data.dungeon) {
-          setSelectedDungeon(res.data.dungeon);
-        }
+        if (res.data.dungeon) setSelectedDungeon(res.data.dungeon);
       }
     } catch (error) {
       console.error("Error attacking:", error);
@@ -423,7 +498,24 @@ export default function Dungeons() {
       toast.error("Stage not unlocked yet");
       return;
     }
-    setCurrentStageIndex(stageIndex);
+    setPendingStageIndex(stageIndex);
+    setStageTransitionNumber(stageIndex + 1);
+    setShowStageTransition(true);
+  };
+
+  const onStageTransitionComplete = () => {
+    if (pendingStageIndex != null) {
+      setCurrentStageIndex(pendingStageIndex);
+      setPendingStageIndex(null);
+    }
+    setShowStageTransition(false);
+    setStageTransitionNumber(null);
+  };
+
+  const onDamagePopupComplete = () => {
+    setLastDamage(null);
+    setShowDamagePopup(false);
+    setLastAttackEnemyHP(null);
   };
 
   return (
@@ -706,7 +798,7 @@ export default function Dungeons() {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div ref={dungeonCardsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {dungeons.map((dungeon) => {
           const progress = user?.dungeonProgress?.find(
             (p) => p.dungeonId === dungeon._id
@@ -716,7 +808,7 @@ export default function Dungeons() {
           const isUnlocked = dungeon.unlocked;
 
           return (
-            <Card key={dungeon._id}>
+            <Card key={dungeon._id} className="dungeon-card">
               {dungeon.image && (
                 <div className="w-full h-48 overflow-hidden">
                   <img
@@ -832,12 +924,14 @@ export default function Dungeons() {
                 </Button>
               </div>
 
-              {/* Current Enemy Info */}
+              {/* Battle Arena */}
               {(() => {
                 const enemy = getCurrentEnemy(selectedDungeon, true);
                 const currentHP = getCurrentEnemyHP();
                 const maxHP = getMaxEnemyHP();
-                const hpPercentage = currentHP ? (currentHP / maxHP) * 100 : 0;
+                const displayHP = showDamagePopup && lastAttackEnemyHP != null
+                  ? lastAttackEnemyHP
+                  : (currentHP ?? 0);
 
                 if (!enemy) {
                   return (
@@ -848,43 +942,49 @@ export default function Dungeons() {
                 }
 
                 return (
-                  <div className="space-y-4">
-                    <div>
-                      <div className="text-sm text-muted-foreground mb-1">
-                        Enemy
-                      </div>
+                  <div
+                    ref={sheetBattleRef}
+                    className="relative rounded-xl border bg-muted/20 dark:bg-muted/10 p-4 space-y-4 min-h-[200px]"
+                  >
+                    <StageTransitionOverlay
+                      stageNumber={stageTransitionNumber}
+                      visible={showStageTransition}
+                      onComplete={onStageTransitionComplete}
+                    />
+                    <div ref={enemyContainerRef} className="relative">
+                      <div className="text-sm text-muted-foreground mb-1">Enemy</div>
                       <div className="flex items-center gap-3">
                         <div className="text-2xl font-bold">{enemy.name}</div>
                         {enemy.cover && (
                           <img
                             src={enemy.cover}
                             alt={enemy.name}
-                            className="w-12 h-12 rounded-lg object-cover border"
+                            className="w-14 h-14 rounded-lg object-cover border-2 border-border shadow-md"
                           />
                         )}
                       </div>
+                      <DamagePopup
+                        value={lastDamage}
+                        visible={showDamagePopup}
+                        onComplete={onDamagePopupComplete}
+                      />
                     </div>
 
-                    {/* Health Bar */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>HP</span>
-                        <span>{currentHP || 0} / {maxHP}</span>
-                      </div>
-                      <Progress value={hpPercentage} className="h-3" />
-                    </div>
+                    <AnimatedHPBar
+                      current={displayHP}
+                      max={maxHP}
+                    />
 
-                    {/* Equipped Weapon */}
                     {weapon && (
-                      <div className="p-3 bg-muted rounded-lg">
+                      <div className="p-3 rounded-lg bg-muted/50 border">
                         <div className="text-sm text-muted-foreground">Equipped Weapon</div>
                         <div className="font-semibold">{weapon.name}</div>
                         <div className="text-sm">Damage: +{weapon.damageBonus}</div>
                       </div>
                     )}
 
-                    {/* Attack Button */}
                     <Button
+                      ref={attackBtnRef}
                       className="w-full"
                       onClick={handleAttack}
                       disabled={!user || user.energy < 1}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Card,
   CardContent,
@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import api from "../lib/api";
 import { useUser } from "../contexts/UserContext";
 import ImageUpload from "../components/ImageUpload";
+import anime from "animejs";
 
 export default function Blacksmith() {
   const { user, refreshUser } = useUser();
@@ -34,10 +35,63 @@ export default function Blacksmith() {
       resources: { meat: 0, wood: 0, stone: 0, iron: 0, crystal: 0 },
     },
   });
+  const weaponsGridRef = useRef(null);
+  const createDialogContentRef = useRef(null);
+  const resourcesGridRef = useRef(null);
+  const hasWeaponsStaggeredRef = useRef(false);
+  const hasResourcesStaggeredRef = useRef(false);
 
   useEffect(() => {
     loadData();
   }, []);
+
+  // Stagger weapon cards on load
+  useEffect(() => {
+    if (loading || weapons.length === 0 || !weaponsGridRef.current || hasWeaponsStaggeredRef.current) return;
+    hasWeaponsStaggeredRef.current = true;
+    const cards = weaponsGridRef.current.querySelectorAll(".blacksmith-weapon-card");
+    if (cards.length === 0) return;
+    anime.set(cards, { opacity: 0, translateY: 20 });
+    anime({
+      targets: cards,
+      opacity: [0, 1],
+      translateY: [20, 0],
+      duration: 420,
+      delay: anime.stagger(55, { start: 100 }),
+      easing: "easeOutExpo",
+    });
+  }, [loading, weapons.length]);
+
+  // Create/Edit dialog scale-in when open
+  useEffect(() => {
+    if (!open || !createDialogContentRef.current) return;
+    const el = createDialogContentRef.current;
+    anime.set(el, { opacity: 0, scale: 0.94 });
+    anime({
+      targets: el,
+      opacity: [0, 1],
+      scale: [0.94, 1],
+      duration: 280,
+      easing: "easeOutExpo",
+    });
+  }, [open]);
+
+  // Stagger resources grid on load (once)
+  useEffect(() => {
+    if (!user || !resourcesGridRef.current || hasResourcesStaggeredRef.current) return;
+    hasResourcesStaggeredRef.current = true;
+    const items = resourcesGridRef.current.querySelectorAll(".blacksmith-resource-item");
+    if (items.length === 0) return;
+    anime.set(items, { opacity: 0, translateY: 10 });
+    anime({
+      targets: items,
+      opacity: [0, 1],
+      translateY: [10, 0],
+      duration: 320,
+      delay: anime.stagger(35, { start: 60 }),
+      easing: "easeOutExpo",
+    });
+  }, [user]);
 
   const loadData = async () => {
     try {
@@ -140,6 +194,15 @@ export default function Blacksmith() {
   };
 
   const handleEquip = async (weaponId) => {
+    const card = document.querySelector(`[data-weapon-id="${weaponId}"]`);
+    if (card) {
+      anime({
+        targets: card,
+        scale: [1.04, 1],
+        duration: 350,
+        easing: "easeOutElastic(1, 0.5)",
+      });
+    }
     try {
       await api.post(`/weapons/${weaponId}/equip`);
       const isEquipped = user?.equippedWeapon === weaponId;
@@ -189,6 +252,7 @@ export default function Blacksmith() {
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div ref={createDialogContentRef}>
             <DialogHeader>
               <DialogTitle>{editingWeapon ? "Edit Weapon" : "Create Weapon"}</DialogTitle>
             </DialogHeader>
@@ -285,6 +349,7 @@ export default function Blacksmith() {
                 </Button>
               </DialogFooter>
             </form>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
@@ -295,8 +360,8 @@ export default function Blacksmith() {
           <CardTitle>Your Resources</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <div className="flex items-center gap-2 p-3 border rounded-lg">
+          <div ref={resourcesGridRef} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="blacksmith-resource-item flex items-center gap-2 p-3 border rounded-lg">
               <Coins className="h-5 w-5 text-yellow-500" />
               <div>
                 <div className="text-xs text-muted-foreground">Coins</div>
@@ -304,7 +369,7 @@ export default function Blacksmith() {
               </div>
             </div>
             {Object.entries(resourceEmojis).map(([resource, emoji]) => (
-              <div key={resource} className="flex items-center gap-2 p-3 border rounded-lg">
+              <div key={resource} className="blacksmith-resource-item flex items-center gap-2 p-3 border rounded-lg">
                 <span className="text-2xl">{emoji}</span>
                 <div>
                   <div className="text-xs text-muted-foreground capitalize">{resource}</div>
@@ -366,24 +431,25 @@ export default function Blacksmith() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div ref={weaponsGridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {weapons.map((weapon) => {
             const isEquipped = user?.equippedWeapon === weapon._id;
             
             return (
               <Card 
-                key={weapon._id} 
-                className={isEquipped ? "ring-2 ring-green-500" : ""}
+                key={weapon._id}
+                data-weapon-id={weapon._id}
+                className={`blacksmith-weapon-card overflow-hidden ${isEquipped ? "ring-2 ring-green-500 shadow-md" : ""}`}
               >
                 {weapon.image && (
-                  <div className="w-full h-32 overflow-hidden relative">
+                  <div className="w-full h-32 overflow-hidden relative rounded-t-lg">
                     <img
                       src={weapon.image}
                       alt={weapon.name}
                       className="w-full h-full object-cover"
                     />
                     {isEquipped && (
-                      <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded text-xs font-semibold flex items-center gap-1">
+                      <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded text-xs font-semibold flex items-center gap-1 shadow">
                         <Check className="h-3 w-3" />
                         Equipped
                       </div>

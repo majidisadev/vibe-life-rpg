@@ -23,6 +23,7 @@ A comprehensive life tracking and gamifying web application that combines produc
 - **Maps**: Leaflet & React Leaflet (for character location mapping)
 - **Charts**: Recharts (for data visualization)
 - **Notifications**: Sonner (toast notifications)
+- **Animations**: Anime.js (RPG-style animations on Dungeons and other fantasy pages)
 - **HTTP Client**: Axios
 
 ## Features
@@ -78,6 +79,15 @@ A comprehensive life tracking and gamifying web application that combines produc
 - Progress tracking through dungeon stages
 - Earn XP and coins by defeating enemies
 - Energy-based combat system (1 energy per attack)
+- **RPG-style UI & animations (Anime.js)**:
+  - Staggered card entrance when dungeons load
+  - Battle arena panel with muted background in explore sheet
+  - Animated HP bar (smooth width transition on damage)
+  - Floating damage popup (-X) on attack
+  - Enemy shake on hit, attack button pulse
+  - Stage transition overlay (“Stage N”) when changing stages
+  - Enemy intro (fade + scale) when switching stages
+  - Battle area fade-in when opening explore sheet
 
 ### Gacha System
 
@@ -85,12 +95,23 @@ A comprehensive life tracking and gamifying web application that combines produc
 - Character collection tracking
 - Active character management for album features
 - Character pool management
+- **RPG-style UI & animations (Anime.js)**:
+  - “Gacha machine” capsule wrapper with border and muted background
+  - Pull sequence: button pulse, machine shake, overlay “Pulling...” while API runs
+  - Pulled character card: stagger reveal (image → name → media) with border/ring
+  - Collected/active character grid: stagger entrance on load; scale bounce when toggling active
+  - Pool detail sheet: stagger list items when sheet opens
 
 ### Market
 
 - Exchange resources for coins
 - Dynamic exchange rates for different resources
 - Resource-to-coin conversion system
+- **RPG-style UI & animations (Anime.js)**:
+  - Header coins badge with scale-in when user is available
+  - Exchange rate cards: stagger entrance on load
+  - Exchange card: stagger sections (resource, amount, “You will receive”, button); border and shop styling
+  - Exchange button pulse on click; “You will receive” box elastic bounce on successful exchange
 
 ### Blacksmith
 
@@ -98,11 +119,22 @@ A comprehensive life tracking and gamifying web application that combines produc
 - Weapon damage bonus system
 - Equip weapons to increase total damage
 - Base attack and total damage tracking
+- **RPG-style UI & animations (Anime.js)**:
+  - Weapon cards: stagger entrance on load; equipped card has ring and shadow
+  - Create/Edit weapon dialog: scale-in when open
+  - Equip/Unequip: card scale bounce (elastic) on click before API
+  - Your Resources grid: stagger entrance for coins and resource items
 
 ### Town
 
 - Build and manage various building types
 - Building progress tracking using build power (from completed Pomodoro sessions)
+- **RPG-style UI & animations (Anime.js)**:
+  - Staggered entrance for house and leisure zone cards on load
+  - Build confirm dialog scale-in when opening
+  - Confirm Build button pulse on click
+  - Card scale bounce + “Built” badge fade-in after successful build
+  - Build power badge scale-in when user is available
 
 ### Album
 
