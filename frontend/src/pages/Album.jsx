@@ -41,7 +41,6 @@ import {
   LayoutGrid,
   Columns,
   Filter,
-  Search,
   X,
   ArrowLeft,
   Users,
@@ -440,10 +439,6 @@ export default function Album() {
 
       {/* Search Form */}
       <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Search className="w-5 h-5" />
-          <h2 className="text-xl font-semibold">Search</h2>
-        </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div>
             <Label htmlFor="search-title">Title</Label>
@@ -636,10 +631,10 @@ export default function Album() {
             <div
               className={
                 layout === "waterfall"
-                  ? "w-full overflow-hidden cursor-pointer"
+                  ? "w-full overflow-hidden cursor-pointer relative group"
                   : layout === "justified"
-                    ? "w-full h-64 overflow-hidden cursor-pointer"
-                    : "w-full h-64 overflow-hidden cursor-pointer"
+                    ? "w-full h-64 overflow-hidden cursor-pointer relative group"
+                    : "w-full h-64 overflow-hidden cursor-pointer relative group"
               }
               onClick={() => setZoomedPhoto(photo)}
             >
@@ -652,13 +647,21 @@ export default function Album() {
                     : "w-full h-full object-cover"
                 }
               />
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete(photo._id);
+                }}
+                className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
             </div>
-            <CardHeader>
-              <CardTitle className="text-sm">
-                {photo.title || "Photo"}
-              </CardTitle>
-              {photo.tags && photo.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-2">
+            {photo.tags && photo.tags.length > 0 && (
+              <CardHeader>
+                <div className="flex flex-wrap gap-1">
                   {photo.tags.map((tag) => (
                     <span
                       key={tag}
@@ -668,31 +671,16 @@ export default function Album() {
                     </span>
                   ))}
                 </div>
-              )}
-            </CardHeader>
-            <CardContent>
-              {photo.characters && photo.characters.length > 0 && (
-                <div className="flex items-center gap-2 mb-2 text-sm text-muted-foreground">
-                  <Users className="w-4 h-4" />
-                  <span>{photo.characters.map((c) => c.name).join(", ")}</span>
-                </div>
-              )}
-              {photo.location && (
-                <div className="flex items-center gap-2 mb-2 text-sm text-muted-foreground">
+              </CardHeader>
+            )}
+            {photo.location && (
+              <CardContent>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <MapPin className="w-4 h-4" />
                   <span>{photo.location.name}</span>
                 </div>
-              )}
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => handleDelete(photo._id)}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            </CardContent>
+              </CardContent>
+            )}
           </Card>
         ))}
       </div>

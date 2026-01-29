@@ -2032,9 +2032,9 @@ export default function Characters() {
         <div className={`grid gap-4 ${getGridCols()}`}>
           {paginatedCharacters.map((item) => (
             <Card key={item._id} className="flex flex-col">
-              {showCoverImage && item.cover && (
+              {showCoverImage && item.cover ? (
                 <div
-                  className={`w-full ${
+                  className={`relative w-full group ${
                     fitImage ? "h-48" : "h-auto"
                   } overflow-hidden bg-muted`}
                 >
@@ -2071,8 +2071,32 @@ export default function Characters() {
                       }}
                     />
                   )}
+                  <div className="absolute bottom-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <Button
+                      size="icon"
+                      variant="secondary"
+                      className="h-7 w-7 shadow-md"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openEditDialog(item);
+                      }}
+                    >
+                      <Pencil className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="destructive"
+                      className="h-7 w-7 shadow-md"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(item._id);
+                      }}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
-              )}
+              ) : null}
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -2086,22 +2110,24 @@ export default function Characters() {
                 </div>
               </CardHeader>
               <CardContent className="flex-1 flex flex-col">
-                <div className="flex gap-2 mt-4 pt-4 border-t justify-center">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => openEditDialog(item)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => handleDelete(item._id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+                {(!showCoverImage || !item.cover) && (
+                  <div className="flex gap-2 mt-4 pt-4 border-t justify-center">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => openEditDialog(item)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handleDelete(item._id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}
