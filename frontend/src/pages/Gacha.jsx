@@ -305,7 +305,7 @@ export default function Gacha() {
         <CardHeader>
           <CardTitle>Active Characters</CardTitle>
           <CardDescription>
-            {activeCharacters.length} / {user?.maxPopulation || 5} (for Album)
+            {activeCharacters.length} / {user?.maxPopulation || 5}
           </CardDescription>
         </CardHeader>
         <CardContent>

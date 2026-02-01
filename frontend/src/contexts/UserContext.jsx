@@ -83,6 +83,8 @@ export function UserProvider({ children }) {
       
       setUser(newUser);
       previousUserRef.current = newUser;
+      applyTheme(newUser?.settings?.theme);
+      applyDarkMode(newUser?.settings?.darkMode);
       
       // Mark initial load as complete after first load
       if (isInitialLoadRef.current) {
@@ -110,10 +112,25 @@ export function UserProvider({ children }) {
       
       setUser(newUser);
       previousUserRef.current = newUser;
+      applyTheme(newUser?.settings?.theme);
+      applyDarkMode(newUser?.settings?.darkMode);
       return newUser;
     } catch (error) {
       console.error('Error updating user:', error);
       return null;
+    }
+  };
+
+  const applyTheme = (theme) => {
+    const value = theme && ['spring', 'summer', 'autumn', 'winter'].includes(theme) ? theme : 'spring';
+    document.documentElement.setAttribute('data-theme', value);
+  };
+
+  const applyDarkMode = (darkMode) => {
+    if (darkMode === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
     }
   };
 
@@ -127,6 +144,16 @@ export function UserProvider({ children }) {
     const interval = setInterval(() => loadUser(true), 30000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      applyTheme(user.settings?.theme);
+      applyDarkMode(user.settings?.darkMode);
+    } else {
+      document.documentElement.setAttribute('data-theme', 'spring');
+      document.documentElement.classList.remove('dark');
+    }
+  }, [user]);
 
   return (
     <UserContext.Provider value={{ user, loading, loadUser, updateUser, refreshUser, setUser }}>

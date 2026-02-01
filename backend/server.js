@@ -20,7 +20,7 @@ import weaponRoutes from "./routes/weapons.js";
 import buildingRoutes from "./routes/buildings.js";
 import marketRoutes from "./routes/market.js";
 import gachaRoutes from "./routes/gacha.js";
-import albumRoutes from "./routes/album.js";
+import journalRoutes from "./routes/journal.js";
 
 dotenv.config();
 
@@ -68,7 +68,7 @@ app.use("/api/weapons", weaponRoutes);
 app.use("/api/buildings", buildingRoutes);
 app.use("/api/market", marketRoutes);
 app.use("/api/gacha", gachaRoutes);
-app.use("/api/album", albumRoutes);
+app.use("/api/journal", journalRoutes);
 
 // Serve frontend in production
 if (isProduction) {

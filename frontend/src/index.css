@@ -47,6 +47,44 @@
     --input: 217.2 32.6% 17.5%;
     --ring: 142.1 70.6% 45.3%;
   }
+
+  /* Summer = Yellow */
+  [data-theme="summer"] {
+    --primary: 47.9 95.8% 53.1%;
+    --primary-foreground: 26 83.3% 14.1%;
+    --ring: 47.9 95.8% 53.1%;
+  }
+  .dark[data-theme="summer"] {
+    --primary: 48 96% 53%;
+    --primary-foreground: 26 83.3% 14.1%;
+    --ring: 48 96% 53%;
+  }
+
+  /* Autumn = Orange */
+  [data-theme="autumn"] {
+    --primary: 24.6 95% 53.1%;
+    --primary-foreground: 60 9.1% 97.8%;
+    --ring: 24.6 95% 53.1%;
+  }
+  .dark[data-theme="autumn"] {
+    --primary: 24.6 95% 47%;
+    --primary-foreground: 60 9.1% 97.8%;
+    --ring: 24.6 95% 47%;
+  }
+
+  /* Winter = Blue */
+  [data-theme="winter"] {
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 210 40% 98%;
+    --ring: 217.2 91.2% 59.8%;
+  }
+  .dark[data-theme="winter"] {
+    --primary: 217.2 91.2% 50%;
+    --primary-foreground: 210 40% 98%;
+    --ring: 217.2 91.2% 50%;
+  }
+
+  /* Spring = Green (default :root values, no override needed) */
 }
 
 @layer base {

@@ -37,7 +37,9 @@ export default function Settings() {
     budgetPerYear: 0,
     currency: 'USD',
     showRealMoney: false,
-    pomodoroXP: 10
+    pomodoroXP: 10,
+    theme: 'spring',
+    darkMode: 'light',
   });
   const [originalSettings, setOriginalSettings] = useState(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -84,7 +86,11 @@ export default function Settings() {
       const res = await api.get('/user');
       setUser(res.data);
       const loadedSettings = res.data.settings;
-      setSettings(loadedSettings);
+      setSettings({
+        ...loadedSettings,
+        theme: loadedSettings.theme || 'spring',
+        darkMode: loadedSettings.darkMode || 'light',
+      });
       // Store original settings for comparison
       setOriginalSettings(JSON.parse(JSON.stringify(loadedSettings)));
       setHasUnsavedChanges(false);
@@ -101,6 +107,7 @@ export default function Settings() {
       toast.success('Settings saved!', {
         description: 'Your settings have been successfully saved.',
       });
+      await refreshUser(false);
       loadData();
     } catch (error) {
       console.error('Error saving settings:', error);
@@ -318,6 +325,64 @@ export default function Settings() {
           <Save className="h-4 w-4" />
         </Button>
       </div>
+
+      {/* Theme Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Theme</CardTitle>
+          <CardDescription>Choose a seasonal theme and light or dark appearance.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
+            <div className="flex-1 min-w-0">
+              <Label htmlFor="theme">Theme</Label>
+              <Select
+                id="theme"
+                value={settings.theme || 'spring'}
+                onValueChange={(value) => setSettings({ ...settings, theme: value })}
+              >
+                <SelectTrigger className="w-full max-w-xs mt-2">
+                  <SelectValue placeholder="Select theme" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="spring">Spring (Green)</SelectItem>
+                  <SelectItem value="summer">Summer (Yellow)</SelectItem>
+                  <SelectItem value="autumn">Autumn (Orange)</SelectItem>
+                  <SelectItem value="winter">Winter (Blue)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="hidden sm:block shrink-0 w-px min-h-[60px] self-stretch bg-border" aria-hidden />
+            <div className="flex-1 min-w-0">
+              <Label className="text-sm font-medium">Appearance</Label>
+              <div className="flex items-center gap-4 mt-2" role="radiogroup" aria-label="Light or dark mode">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="darkMode"
+                    value="light"
+                    checked={(settings.darkMode || 'light') === 'light'}
+                    onChange={() => setSettings({ ...settings, darkMode: 'light' })}
+                    className="h-4 w-4 border-primary text-primary focus:ring-primary"
+                  />
+                  <span className="text-sm">Light</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="darkMode"
+                    value="dark"
+                    checked={(settings.darkMode || 'light') === 'dark'}
+                    onChange={() => setSettings({ ...settings, darkMode: 'dark' })}
+                    className="h-4 w-4 border-primary text-primary focus:ring-primary"
+                  />
+                  <span className="text-sm">Dark</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Tags Settings */}
       <Card>

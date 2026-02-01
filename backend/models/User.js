@@ -5,6 +5,7 @@ const userSchema = new mongoose.Schema(
     name: { type: String, default: "Player" },
     avatar: { type: String, default: "🎮" },
     profilePicture: { type: String, default: "" },
+    coverImage: { type: String, default: "" },
     level: { type: Number, default: 0 },
     xp: { type: Number, default: 0 },
     coins: { type: Number, default: 0 },
@@ -74,6 +75,8 @@ const userSchema = new mongoose.Schema(
       showRealMoney: { type: Boolean, default: false },
       pomodoroDailyGoal: { type: Number, default: 60, min: 0, max: 480 }, // in minutes, max 8 hours
       pomodoroXP: { type: Number, default: 10, min: 0 }, // XP reward for completing a pomodoro session
+      theme: { type: String, enum: ['spring', 'summer', 'autumn', 'winter'], default: 'spring' }, // UI theme: spring=green, summer=yellow, autumn=orange, winter=blue
+      darkMode: { type: String, enum: ['light', 'dark'], default: 'light' }, // UI appearance: light or dark
     },
     pomodoroEntries: [
       {

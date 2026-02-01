@@ -24,9 +24,11 @@ router.put('/', async (req, res) => {
       user = await new User().save();
     }
     
-    const { tags, difficulty, financeCategories, budgetPerYear, currency, showRealMoney, pomodoroDailyGoal, pomodoroXP } = req.body;
+    const { tags, difficulty, financeCategories, budgetPerYear, currency, showRealMoney, pomodoroDailyGoal, pomodoroXP, theme, darkMode } = req.body;
     
     if (tags) user.settings.tags = tags;
+    if (theme && ['spring', 'summer', 'autumn', 'winter'].includes(theme)) user.settings.theme = theme;
+    if (darkMode && ['light', 'dark'].includes(darkMode)) user.settings.darkMode = darkMode;
     if (difficulty) {
       if (difficulty.easy) user.settings.difficulty.easy = { ...user.settings.difficulty.easy, ...difficulty.easy };
       if (difficulty.medium) user.settings.difficulty.medium = { ...user.settings.difficulty.medium, ...difficulty.medium };

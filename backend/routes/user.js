@@ -24,10 +24,11 @@ router.put('/', async (req, res) => {
       user = await new User().save();
     }
     
-    const { name, avatar, profilePicture, settings, bookmarks } = req.body;
+    const { name, avatar, profilePicture, coverImage, settings, bookmarks } = req.body;
     if (name !== undefined) user.name = name;
     if (avatar !== undefined) user.avatar = avatar;
     if (profilePicture !== undefined) user.profilePicture = profilePicture;
+    if (coverImage !== undefined) user.coverImage = coverImage;
     if (bookmarks !== undefined) user.bookmarks = bookmarks;
     if (settings !== undefined) {
       if (settings.tags) user.settings.tags = settings.tags;
@@ -42,6 +43,12 @@ router.put('/', async (req, res) => {
       }
       if (settings.pomodoroXP !== undefined) {
         user.settings.pomodoroXP = Math.max(0, settings.pomodoroXP);
+      }
+      if (settings.theme && ['spring', 'summer', 'autumn', 'winter'].includes(settings.theme)) {
+        user.settings.theme = settings.theme;
+      }
+      if (settings.darkMode && ['light', 'dark'].includes(settings.darkMode)) {
+        user.settings.darkMode = settings.darkMode;
       }
       if (settings.marketRates) user.settings.marketRates = settings.marketRates;
     }

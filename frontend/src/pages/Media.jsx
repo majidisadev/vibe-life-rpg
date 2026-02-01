@@ -384,6 +384,8 @@ export default function Media() {
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [countryMedia, setCountryMedia] = useState([]);
   const [countryList, setCountryList] = useState([]);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState(null);
 
   // Load country list from GeoJSON
   useEffect(() => {
@@ -1643,9 +1645,22 @@ export default function Media() {
                   <img
                     src={item.coverImage}
                     alt={item.title}
-                    className={`w-full ${
+                    role="button"
+                    tabIndex={0}
+                    className={`w-full cursor-pointer ${
                       fitImage ? "h-full object-cover" : "h-auto object-contain"
                     }`}
+                    onClick={() => {
+                      setLightboxImage(item.coverImage);
+                      setLightboxOpen(true);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setLightboxImage(item.coverImage);
+                        setLightboxOpen(true);
+                      }
+                    }}
                   />
                   <div className="absolute bottom-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                     <Button
@@ -1801,6 +1816,21 @@ export default function Media() {
               <Trash2 className="h-4 w-4" />
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Image Lightbox */}
+      <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-0 bg-black/20 backdrop-blur-md overflow-hidden">
+          <div className="relative flex items-center justify-center min-h-[80vh]">
+            {lightboxImage && (
+              <img
+                src={lightboxImage}
+                alt=""
+                className="max-w-full max-h-[85vh] object-contain"
+              />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 

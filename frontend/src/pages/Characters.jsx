@@ -527,6 +527,8 @@ export default function Characters() {
   const [mediaSearchOpen, setMediaSearchOpen] = useState(false);
   const [mediaSearchQuery, setMediaSearchQuery] = useState("");
   const [coverImageMode, setCoverImageMode] = useState("url"); // 'url' or 'upload'
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState(null);
 
   // Load country list from GeoJSON
   useEffect(() => {
@@ -2049,12 +2051,25 @@ export default function Characters() {
                     <img
                       src={item.cover}
                       alt={item.name}
-                      className={`w-full ${
+                      role="button"
+                      tabIndex={0}
+                      className={`w-full cursor-pointer ${
                         fitImage
                           ? "h-full object-cover"
                           : "h-auto object-contain"
                       }`}
                       loading="lazy"
+                      onClick={() => {
+                        setLightboxImage(item.cover);
+                        setLightboxOpen(true);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setLightboxImage(item.cover);
+                          setLightboxOpen(true);
+                        }
+                      }}
                       onError={(e) => {
                         console.error("Error loading cover image for character:", item._id, item.cover?.substring(0, 50));
                         setImageErrors((prev) => ({
@@ -2195,6 +2210,21 @@ export default function Characters() {
           </CardContent>
         </Card>
       )}
+
+      {/* Image Lightbox */}
+      <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-0 bg-black/20 backdrop-blur-md overflow-hidden">
+          <div className="relative flex items-center justify-center min-h-[80vh]">
+            {lightboxImage && (
+              <img
+                src={lightboxImage}
+                alt=""
+                className="max-w-full max-h-[85vh] object-contain"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Character Confirmation Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

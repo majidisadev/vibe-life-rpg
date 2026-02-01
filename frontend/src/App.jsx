@@ -8,12 +8,12 @@ import Media from './pages/Media';
 import Characters from './pages/Characters';
 import Settings from './pages/Settings';
 import FantasyWorld from './pages/FantasyWorld';
+import Gallery from './pages/Gallery';
 import Dungeons from './pages/Dungeons';
 import Town from './pages/Town';
 import Blacksmith from './pages/Blacksmith';
 import Market from './pages/Market';
 import Gacha from './pages/Gacha';
-import Album from './pages/Album';
 import Layout from './components/Layout';
 
 function App() {
@@ -34,12 +34,12 @@ function App() {
             <Route path="/characters" element={<Characters />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/fantasy-world" element={<FantasyWorld />} />
+            <Route path="/fantasy-world/gallery" element={<Gallery />} />
             <Route path="/dungeons" element={<Dungeons />} />
             <Route path="/town" element={<Town />} />
             <Route path="/blacksmith" element={<Blacksmith />} />
             <Route path="/market" element={<Market />} />
             <Route path="/gacha" element={<Gacha />} />
-            <Route path="/album" element={<Album />} />
           </Routes>
         </Layout>
         <Toaster 

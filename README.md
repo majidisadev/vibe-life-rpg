@@ -93,7 +93,7 @@ A comprehensive life tracking and gamifying web application that combines produc
 
 - Pull supporting characters using energy
 - Character collection tracking
-- Active character management for album features
+- Active character management
 - Character pool management
 - **RPG-style UI & animations (Anime.js)**:
   - “Gacha machine” capsule wrapper with border and muted background
@@ -135,13 +135,6 @@ A comprehensive life tracking and gamifying web application that combines produc
   - Confirm Build button pulse on click
   - Card scale bounce + “Built” badge fade-in after successful build
   - Build power badge scale-in when user is available
-
-### Album
-
-- Upload and manage photos (consumes 1 energy per upload)
-- Tag system for photo organization
-- Link photos to active characters
-- Photo gallery with filtering capabilities
 
 ## Mechanics
 
@@ -270,7 +263,6 @@ liferpg/
 │   │   ├── Dungeon.js   # Dungeon definitions
 │   │   ├── Weapon.js    # Weapons
 │   │   ├── Building.js  # Buildings
-│   │   ├── Album.js     # Photo album
 │   │   └── Wishlist.js  # Wishlist items
 │   ├── routes/          # API route handlers
 │   │   ├── user.js
@@ -310,8 +302,7 @@ liferpg/
 │   │   │   ├── Town.jsx
 │   │   │   ├── Blacksmith.jsx
 │   │   │   ├── Market.jsx
-│   │   │   ├── Gacha.jsx
-│   │   │   └── Album.jsx
+│   │   │   └── Gacha.jsx
 │   │   ├── contexts/    # React contexts
 │   │   │   └── UserContext.jsx
 │   │   ├── lib/         # Utilities
@@ -348,7 +339,6 @@ All API endpoints are prefixed with `/api`:
 - **`/api/buildings`** - Building construction and management
 - **`/api/market`** - Resource-to-coin exchange
 - **`/api/gacha`** - Gacha system for character collection
-- **`/api/album`** - Photo album management (upload, tag, link to characters/locations)
 
 All endpoints support standard REST operations (GET, POST, PUT, DELETE) where applicable.
 
@@ -398,7 +388,6 @@ All endpoints support standard REST operations (GET, POST, PUT, DELETE) where ap
 - **Resources**: Meat, wood, stone, iron, crystal
 - **Buildings**: Construct buildings using resources and build power (from completed Pomodoro sessions)
 - **Gacha**: Collect characters using energy
-- **Album**: Photo management linked to characters and locations
 
 ### Data Management
 
